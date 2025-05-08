@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Library</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h1 { text-align: center; }
+    .container { max-width: 800px; margin: auto; }
+    input, select, button { padding: 8px; margin: 5px 0px; width: 95%; }
+    .book { background: #fff; padding: 10px; border-radius: 5px; margin-bottom: 10px; box-shadow: 0 0 5px #ccc; }
+    .history { font-size: 0.9em; color: gray; margin-top: 5px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .adbtn{
+        width: 800px;
+    }
+    .inp{
+        width: 780px;
+    }
+    .brw{
+        margin-left: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>📚 Personal Book Library</h1>
+
+    <!-- Add Book Form -->
+    <div>
+      <h3>Add New Book</h3>
+      <input class="inp" id="title" placeholder="Book Title">
+      <input class="inp" id="author" placeholder="Author">
+      <input class="inp" id="category" placeholder="Category">
+      <button class="adbtn" onclick="addBook()">Add Book</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid">
+      <input id="search" placeholder="Search by title..." oninput="renderBooks()">
+      <input id="filterCategory" placeholder="Filter by category..." oninput="renderBooks()">
+    </div>
+
+    <!-- Book List -->
+    <div id="bookList"></div>
+  </div>
+
+  <script>
+    let books = JSON.parse(localStorage.getItem('books') || '[]');
+
+    function saveBooks() {
+      localStorage.setItem('books', JSON.stringify(books));
+    }
+
+    function addBook() {
+      const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
+      const category = document.getElementById('category').value.trim();
+      if (!title || !author || !category) return alert("Please fill all fields");
+
+      books.push({ title, author, category, isBorrowed: false, history: [] });
+      saveBooks();
+      renderBooks();
+      document.getElementById('title').value = '';
+      document.getElementById('author').value = '';
+      document.getElementById('category').value = '';
+    }
+
+    function borrowBook(index) {
+      const borrower = prompt("Enter borrower's name:");
+      if (!borrower) return;
+      books[index].isBorrowed = true;
+      books[index].history.push({ date: new Date().toLocaleDateString(), borrower });
+      saveBooks();
+      renderBooks();
+    }
+
+    function renderBooks() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const categoryFilter = document.getElementById('filterCategory').value.toLowerCase();
+      const bookList = document.getElementById('bookList');
+      bookList.innerHTML = '';
+
+      books.filter(book => 
+        book.title.toLowerCase().includes(search) &&
+        book.category.toLowerCase().includes(categoryFilter)
+      ).forEach((book, index) => {
+        const div = document.createElement('div');
+        div.className = 'book';
+        div.innerHTML = `
+          <strong>${book.title}</strong> by ${book.author}<br>
+          <em>Category:</em> ${book.category}<br>
+          <em>Status:</em> ${book.isBorrowed ? 'Borrowed' : 'Available'}
+          <br>
+          <button Class="brw" onclick="borrowBook(${index})" ${book.isBorrowed ? 'disabled' : ''}>Borrow</button>
+          <div class="history">
+            ${book.history.map(h => `${h.borrower} on ${h.date}`).join('<br>')}
+          </div>
+        `;
+        bookList.appendChild(div);
+      });
+    }
+
+    renderBooks();
+  </script>
+</body>
+</html>
